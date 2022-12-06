@@ -6,7 +6,7 @@ first of which is available [here](https://www.stephengream.com/writing-a-vm-par
 Our computer is a 32-bit computer, meaning our control unit executes instructions that are
 32 bits in length. We will use hexadecimal here to simplify reading.
 
-![What an instruction looks like](./docs/Instruction.png)
+![What an instruction looks like](./docs/Instruction.drawio.png)
 
 We break our instructions up into four parts:
 * **The Opcode** - One byte for the instruction to execute, for example an add or multiply operation

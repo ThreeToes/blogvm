@@ -8,6 +8,11 @@ const (
 	WRITE
 	COPY
 	ADD
+	SUB
+	MUL
+	DIV
+	STAT
+	SET
 )
 
 type CPU struct {
@@ -42,7 +47,33 @@ func (c *CPU) copy(i1, i2 *Register) {
 }
 
 func (c *CPU) add(i1, i2 *Register) {
-	i2.value = i1.value + i2.value
+	i1Val := uint64(i1.value)
+	i2Val := uint64(i2.value)
+	sum := i1Val + i2Val
+	if sum > 0xFFFFFFFF {
+		sr, err := c.registers.GetRegister(SR)
+		// We'll panic here because if the status register doesn't work then our machine may as well crash
+		if err != nil {
+			panic(err)
+		}
+		sr.value = sr.value | STATUS_OVERFLOW
+	}
+	i2.value = uint32(sum & 0xFFFFFFFF)
+}
+
+func (c *CPU) sub(i1, i2 *Register) {
+	i1Val := int64(i1.value)
+	i2Val := int64(i2.value)
+	diff := i1Val - i2Val
+	if diff < 0 {
+		sr, err := c.registers.GetRegister(SR)
+		if err != nil {
+			panic(err)
+		}
+		sr.value = sr.value | STATUS_UNDERFLOW
+		diff = diff + 0xFFFFFFFF
+	}
+	i2.value = uint32(diff & 0xFFFFFFFF)
 }
 
 func (c *CPU) executeInstruction(instruction uint32) error {
@@ -81,6 +112,8 @@ func (c *CPU) executeInstruction(instruction uint32) error {
 		c.copy(i1, i2)
 	case ADD:
 		c.add(i1, i2)
+	case SUB:
+		c.sub(i1, i2)
 	}
 
 	return nil

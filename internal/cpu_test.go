@@ -71,5 +71,48 @@ func TestCPU(t *testing.T) {
 		assert.NoError(t, err)
 		assert.False(t, cpu.Halted)
 		assert.Equal(t, uint32(0x13), registers.registerMap[R1].value)
+		assert.Equal(t, uint32(0x0), registers.registerMap[SR].value)
+	})
+	t.Run("test add with overflow", func(t *testing.T) {
+		registers := NewRegisterBank()
+		bus := NewBus(NewMemory())
+		cpu := NewCPU(registers, bus)
+
+		registers.registerMap[R1].value = 0xFFFFFFFE
+		bus.Write(0x100, 0x04F10003)
+
+		err := cpu.Tick()
+		assert.NoError(t, err)
+		assert.False(t, cpu.Halted)
+		assert.Equal(t, uint32(0x1), registers.registerMap[R1].value)
+		assert.Equal(t, STATUS_OVERFLOW, registers.registerMap[SR].value)
+	})
+	t.Run("test sub", func(t *testing.T) {
+		registers := NewRegisterBank()
+		bus := NewBus(NewMemory())
+		cpu := NewCPU(registers, bus)
+
+		registers.registerMap[R1].value = 0x02
+		bus.Write(0x100, 0x05F10003)
+
+		err := cpu.Tick()
+		assert.NoError(t, err)
+		assert.False(t, cpu.Halted)
+		assert.Equal(t, uint32(0x1), registers.registerMap[R1].value)
+		assert.Equal(t, uint32(0x0), registers.registerMap[SR].value)
+	})
+	t.Run("test sub with underflow check", func(t *testing.T) {
+		registers := NewRegisterBank()
+		bus := NewBus(NewMemory())
+		cpu := NewCPU(registers, bus)
+
+		registers.registerMap[R1].value = 0x05
+		bus.Write(0x100, 0x05F10003)
+
+		err := cpu.Tick()
+		assert.NoError(t, err)
+		assert.False(t, cpu.Halted)
+		assert.Equal(t, uint32(0xFFFFFFFD), registers.registerMap[R1].value)
+		assert.Equal(t, STATUS_UNDERFLOW, registers.registerMap[SR].value)
 	})
 }
