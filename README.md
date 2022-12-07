@@ -43,3 +43,15 @@ registers. We will use the value 0xF to refer to the **immediate data** in an in
 | 0xD       | PC       | Program counter      | 0x100         |
 | 0xE       | IR       | Instruction register | 0x00          |
 | 0xF       | #{n}     | Immediate data       | N/A           |
+
+## Status Flags
+The bits in the `SR` each represent a flag to convey status in the machine, with bit 0 being the least significant
+bit.
+
+| Bit number | Mnemonic              | Description                                                     |
+|------------|-----------------------|-----------------------------------------------------------------|
+| 1          | STATUS_HALT           | Whether the machine has been halted                             |
+| 2          | STATUS_OVERFLOW       | If an integer overflow has occurred                             |
+| 3          | STATUS_UNDERFLOW      | If an integer underflow has occurred                            |
+| 4          | STATUS_DIVIDE_BY_ZERO | If the machine has attempted to divide a number by zero         |
+| 5          | STATUS_MEMORY_ERROR   | If the machine has experienced an error trying to access memory |

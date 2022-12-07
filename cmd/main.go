@@ -34,7 +34,12 @@ func main() {
 	bus := internal.NewBus(mem)
 	cpu := internal.NewCPU(registers, bus)
 
-	for !cpu.Halted {
+	sr, err := registers.GetRegister(internal.SR)
+	if err != nil {
+		fmt.Printf("Could not get the staus register: %v", err)
+		return
+	}
+	for sr.Value&internal.STATUS_HALT == 0 {
 		cpu.Tick()
 	}
 	val, err := mem.Read(0x1000)

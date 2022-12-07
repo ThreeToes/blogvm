@@ -9,8 +9,8 @@ type MemoryRange struct {
 type BusDevice interface {
 	// MemoryRange gives the memory range of the device
 	MemoryRange() *MemoryRange
-	// Read takes an address and returns the value at address
+	// Read takes an address and returns the Value at address
 	Read(address uint32) (uint32, error)
-	// Write writes value to address
+	// Write writes Value to address
 	Write(address, value uint32) error
 }

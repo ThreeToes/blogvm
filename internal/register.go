@@ -26,10 +26,11 @@ const (
 	STATUS_OVERFLOW
 	STATUS_UNDERFLOW
 	STATUS_DIVIDE_BY_ZERO
+	STATUS_MEMORY_ERROR
 )
 
 type Register struct {
-	value uint32
+	Value uint32
 }
 
 type RegisterBank struct {

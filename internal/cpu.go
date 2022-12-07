@@ -18,37 +18,47 @@ const (
 type CPU struct {
 	registers *RegisterBank
 	bus       *Bus
-	Halted    bool
 }
 
 func (c *CPU) halt(_, _ *Register) {
-	c.Halted = true
+	sr, err := c.registers.GetRegister(SR)
+	if err != nil {
+		panic(err)
+	}
+	sr.Value = sr.Value | STATUS_HALT
 }
 
 func (c *CPU) read(i1, i2 *Register) {
-	val, err := c.bus.Read(i1.value)
+	val, err := c.bus.Read(i1.Value)
 	if err != nil {
-		c.Halted = true
+		sr, err := c.registers.GetRegister(SR)
+		if err != nil {
+			panic(err)
+		}
+		sr.Value = sr.Value | STATUS_MEMORY_ERROR
 		return
 	}
-	i2.value = val
+	i2.Value = val
 }
 
 func (c *CPU) write(i1, i2 *Register) {
-	err := c.bus.Write(i2.value, i1.value)
+	err := c.bus.Write(i2.Value, i1.Value)
 	if err != nil {
-		c.Halted = true
-		return
+		sr, err := c.registers.GetRegister(SR)
+		if err != nil {
+			panic(err)
+		}
+		sr.Value = sr.Value | STATUS_MEMORY_ERROR
 	}
 }
 
 func (c *CPU) copy(i1, i2 *Register) {
-	i2.value = i1.value
+	i2.Value = i1.Value
 }
 
 func (c *CPU) add(i1, i2 *Register) {
-	i1Val := uint64(i1.value)
-	i2Val := uint64(i2.value)
+	i1Val := uint64(i1.Value)
+	i2Val := uint64(i2.Value)
 	sum := i1Val + i2Val
 	if sum > 0xFFFFFFFF {
 		sr, err := c.registers.GetRegister(SR)
@@ -56,24 +66,82 @@ func (c *CPU) add(i1, i2 *Register) {
 		if err != nil {
 			panic(err)
 		}
-		sr.value = sr.value | STATUS_OVERFLOW
+		sr.Value = sr.Value | STATUS_OVERFLOW
 	}
-	i2.value = uint32(sum & 0xFFFFFFFF)
+	i2.Value = uint32(sum & 0xFFFFFFFF)
 }
 
 func (c *CPU) sub(i1, i2 *Register) {
-	i1Val := int64(i1.value)
-	i2Val := int64(i2.value)
+	i1Val := int64(i1.Value)
+	i2Val := int64(i2.Value)
 	diff := i1Val - i2Val
 	if diff < 0 {
 		sr, err := c.registers.GetRegister(SR)
 		if err != nil {
 			panic(err)
 		}
-		sr.value = sr.value | STATUS_UNDERFLOW
+		sr.Value = sr.Value | STATUS_UNDERFLOW
 		diff = diff + 0xFFFFFFFF
 	}
-	i2.value = uint32(diff & 0xFFFFFFFF)
+	i2.Value = uint32(diff & 0xFFFFFFFF)
+}
+
+func (c *CPU) mul(i1, i2 *Register) {
+	i1Val := int64(i1.Value)
+	i2Val := int64(i2.Value)
+
+	product := i1Val * i2Val
+
+	if product > 0xFFFFFFFF {
+		sr, err := c.registers.GetRegister(SR)
+		// We'll panic here because if the status register doesn't work then our machine may as well crash
+		if err != nil {
+			panic(err)
+		}
+		sr.Value = sr.Value | STATUS_OVERFLOW
+	}
+	i2.Value = uint32(product & 0xFFFFFFFF)
+}
+
+func (c *CPU) div(i1, i2 *Register) {
+	i1Val := i1.Value
+	i2Val := i2.Value
+
+	if i2Val == 0 {
+		sr, err := c.registers.GetRegister(SR)
+		// We'll panic here because if the status register doesn't work then our machine may as well crash
+		if err != nil {
+			panic(err)
+		}
+		sr.Value = sr.Value | STATUS_DIVIDE_BY_ZERO
+		return
+	}
+
+	i2.Value = i1Val / i2Val
+}
+
+func (c *CPU) stat(i1, i2 *Register) {
+	var bit uint32 = 1 << (i1.Value - 1)
+	sr, err := c.registers.GetRegister(SR)
+	if err != nil {
+		panic(err)
+	}
+	// Should be either 0 or 1
+	i2.Value = (sr.Value & bit) / bit
+}
+
+func (c *CPU) set(i1, i2 *Register) {
+	sr, err := c.registers.GetRegister(SR)
+	if err != nil {
+		panic(err)
+	}
+
+	var bit uint32 = 1 << (i1.Value - 1)
+	if i2.Value > 0 {
+		sr.Value = sr.Value | bit
+	} else {
+		sr.Value = sr.Value ^ bit
+	}
 }
 
 func (c *CPU) executeInstruction(instruction uint32) error {
@@ -85,7 +153,7 @@ func (c *CPU) executeInstruction(instruction uint32) error {
 	var i1, i2 *Register
 	var err error
 	if regIndex1 == 0xF {
-		i1 = &Register{value: imm}
+		i1 = &Register{Value: imm}
 	} else {
 		i1, err = c.registers.GetRegister(regIndex1)
 		if err != nil {
@@ -93,7 +161,7 @@ func (c *CPU) executeInstruction(instruction uint32) error {
 		}
 	}
 	if regIndex2 == 0xF {
-		i2 = &Register{value: imm}
+		i2 = &Register{Value: imm}
 	} else {
 		i2, err = c.registers.GetRegister(regIndex2)
 		if err != nil {
@@ -114,13 +182,29 @@ func (c *CPU) executeInstruction(instruction uint32) error {
 		c.add(i1, i2)
 	case SUB:
 		c.sub(i1, i2)
+	case MUL:
+		c.mul(i1, i2)
+	case DIV:
+		c.div(i1, i2)
+	case STAT:
+		c.stat(i1, i2)
+	case SET:
+		c.set(i1, i2)
+	default:
+		// Halt the machine if we can't figure out the instruction
+		c.set(&Register{1}, &Register{1})
+		return fmt.Errorf("unrecognised opcode '%x'", opcode)
 	}
 
 	return nil
 }
 
 func (c *CPU) Tick() error {
-	if c.Halted {
+	sr, err := c.registers.GetRegister(SR)
+	if err != nil {
+		return err
+	}
+	if sr.Value&STATUS_HALT > 0 {
 		return fmt.Errorf("cannot tick on a Halted machine")
 	}
 	ir, err := c.registers.GetRegister(IR)
@@ -131,14 +215,14 @@ func (c *CPU) Tick() error {
 	if err != nil {
 		return err
 	}
-	ir.value, err = c.bus.Read(pc.value)
+	ir.Value, err = c.bus.Read(pc.Value)
 	if err != nil {
 		return err
 	}
-	pc.value++
-	err = c.executeInstruction(ir.value)
+	pc.Value++
+	err = c.executeInstruction(ir.Value)
 	if err != nil {
-		c.Halted = true
+		sr.Value = sr.Value | STATUS_HALT
 	}
 	return err
 }
@@ -147,6 +231,5 @@ func NewCPU(registers *RegisterBank, bus *Bus) *CPU {
 	return &CPU{
 		registers: registers,
 		bus:       bus,
-		Halted:    false,
 	}
 }
