@@ -15,18 +15,18 @@ Instructions consist of four parts:
 * **Immediate data** - 2 bytes for any immediate data. More on this later
 
 ## Instruction Reference
-| Hex Value | Mnemonic | Description                                          |
-|-----------|----------|------------------------------------------------------|
-| 0x00      | HALT     | Halt the machine                                     |
-| 0x01      | READ     | Read from the memory address in I1                   |
-| 0x02      | WRITE    | Write to the memory address in D                     |
-| 0x03      | COPY     | Copy from register I1 to D                           |
-| 0x04      | ADD      | Add I1 to I2 and store in D                          |
-| 0x05      | SUB      | Subtract I2 from I1 and store the result in D        |
-| 0x06      | MUL      | Multiply I1 by I2 and store the result in D          |
-| 0x07      | DIV      | Divide I1 by I2 and store the result in D            |
-| 0x08      | STAT     | Get the status at bit I1 and store the result in D   |
-| 0x09      | SET      | Set the status at but I1 to I2                       |
+| Hex Value | Mnemonic | Description                                        |
+|-----------|----------|----------------------------------------------------|
+| 0x00      | HALT     | Halt the machine                                   |
+| 0x01      | READ     | Read from the memory address in I1                 |
+| 0x02      | WRITE    | Write to the memory address in D                   |
+| 0x03      | COPY     | Copy from register I1 to D                         |
+| 0x04      | ADD      | Add I1 to I2 and store in D                        |
+| 0x05      | SUB      | Subtract I2 from I1 and store the result in D      |
+| 0x06      | MUL      | Multiply I1 by I2 and store the result in D        |
+| 0x07      | DIV      | Divide I1 by I2 and store the result in D          |
+| 0x08      | STAT     | Get the status at bit I1 and store the result in D |
+| 0x09      | SET      | Set the status at bit I1 to I2                     |
 
 
 ## Addressing registers
