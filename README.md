@@ -3,12 +3,12 @@ I'm currently writing a blog series to go with this project, the
 first of which is available [here](https://www.stephengream.com/writing-a-vm-part-one)
 
 ## Instruction structure
-Our computer is a 32-bit computer, meaning our control unit executes instructions that are
+This VM is a 32-bit computer, meaning the control unit executes instructions that are
 32 bits in length. We will use hexadecimal here to simplify reading.
 
 ![What an instruction looks like](./docs/Instruction.drawio.png)
 
-We break our instructions up into four parts:
+Instructions consist of four parts:
 * **The Opcode** - One byte for the instruction to execute, for example an add or multiply operation
 * **Input 1 (`I1`)** - 4 bits for the first input register, we will elaborate on how to address these later
 * **Input 2/Destination (`I2`/`D`)** - 4 bits for the second input register, which will double as a destination value.
@@ -30,8 +30,8 @@ We break our instructions up into four parts:
 
 
 ## Addressing registers
-Each register is addressed with 4 bits of data, meaning we can potentially refer to 16 different
-registers. We will use the value 0xF to refer to the **immediate data** in an instruction
+Each register is addressed with 4 bits of data, potentially refering to 16 different
+registers. The value 0xF refers to the **immediate data** in an instruction
 
 | Hex Value | Mnemonic | Description          | Initial Value |
 |-----------|----------|----------------------|---------------|
