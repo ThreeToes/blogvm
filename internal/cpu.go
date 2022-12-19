@@ -13,6 +13,16 @@ const (
 	DIV
 	STAT
 	SET
+	PUSH
+	POP
+	JMP
+	LESS
+	LTE
+	GT
+	GTE
+	EQ
+	CALL
+	RETURN
 )
 
 type CPU struct {
@@ -144,6 +154,43 @@ func (c *CPU) set(i1, i2 *Register) {
 	}
 }
 
+func (c *CPU) push(i1, _ *Register) {
+	sp, err := c.registers.GetRegister(SP)
+	if err != nil {
+		panic(err)
+	}
+
+	sp.Value--
+	err = c.bus.Write(sp.Value, i1.Value)
+	if err != nil {
+		sr, err := c.registers.GetRegister(SR)
+		if err != nil {
+			panic(err)
+		}
+		sr.Value = sr.Value | STATUS_MEMORY_ERROR
+		return
+	}
+}
+
+func (c *CPU) pop(_, i2 *Register) {
+	sp, err := c.registers.GetRegister(SP)
+	if err != nil {
+		panic(err)
+	}
+
+	v, err := c.bus.Read(sp.Value)
+	if err != nil {
+		sr, err := c.registers.GetRegister(SR)
+		if err != nil {
+			panic(err)
+		}
+		sr.Value = sr.Value | STATUS_MEMORY_ERROR
+		return
+	}
+	i2.Value = v
+	sp.Value++
+}
+
 func (c *CPU) executeInstruction(instruction uint32) error {
 	opcode := uint8(instruction >> 24)
 	regIndex1 := uint8((instruction & 0x00F00000) >> 20)
@@ -190,6 +237,10 @@ func (c *CPU) executeInstruction(instruction uint32) error {
 		c.stat(i1, i2)
 	case SET:
 		c.set(i1, i2)
+	case PUSH:
+		c.push(i1, i2)
+	case POP:
+		c.pop(i1, i2)
 	default:
 		// Halt the machine if we can't figure out the instruction
 		c.set(&Register{1}, &Register{1})

@@ -14,7 +14,7 @@ const (
 	__reserved5
 	__reserved6
 	__reserved7
-	__reserved8
+	SP
 	SR
 	PC
 	IR
@@ -51,6 +51,7 @@ func NewRegisterBank() *RegisterBank {
 			R1: {0x00},
 			R2: {0x00},
 			R3: {0x00},
+			SP: {0xFFE0},
 			SR: {0x00},
 			PC: {0x100},
 			IR: {0x00},

@@ -3,7 +3,7 @@ package internal
 import "fmt"
 
 type Memory struct {
-	mem [0xFFE0]uint32
+	mem [0xFFE1]uint32
 }
 
 func (m *Memory) MemoryRange() *MemoryRange {
@@ -30,6 +30,6 @@ func (m *Memory) Write(address, value uint32) error {
 
 func NewMemory() *Memory {
 	return &Memory{
-		mem: [0xFFE0]uint32{},
+		mem: [0xFFE1]uint32{},
 	}
 }

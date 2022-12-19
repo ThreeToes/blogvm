@@ -228,4 +228,37 @@ func TestCPU(t *testing.T) {
 		assert.Error(t, err)
 		assert.Equal(t, STATUS_HALT, registers.registerMap[SR].Value)
 	})
+	t.Run("test push", func(t *testing.T) {
+		registers := NewRegisterBank()
+		bus := NewBus(NewMemory())
+		cpu := NewCPU(registers, bus)
+
+		registers.registerMap[SR].Value = 0x00000000
+		registers.registerMap[R1].Value = 0x00
+		bus.Write(0x100, 0x0AF00002)
+
+		err := cpu.Tick()
+		assert.NoError(t, err)
+		assert.Equal(t, uint32(0xFFDF), registers.registerMap[SP].Value)
+		v, err := bus.Read(0xFFDF)
+		assert.NoError(t, err)
+		assert.Equal(t, uint32(0x02), v)
+	})
+	t.Run("test pop", func(t *testing.T) {
+		registers := NewRegisterBank()
+		bus := NewBus(NewMemory())
+		cpu := NewCPU(registers, bus)
+
+		registers.registerMap[SR].Value = 0x00000000
+		registers.registerMap[R1].Value = 0x00
+		registers.registerMap[SP].Value = 0xFFDF
+		bus.Write(0x100, 0x0BF00002)
+		bus.Write(0xFFDF, 0x10)
+
+		err := cpu.Tick()
+		assert.NoError(t, err)
+		assert.Equal(t, uint32(0xFFE0), registers.registerMap[SP].Value)
+		assert.NoError(t, err)
+		assert.Equal(t, uint32(0x10), registers.registerMap[R0].Value)
+	})
 }

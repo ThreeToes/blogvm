@@ -27,6 +27,17 @@ Instructions consist of four parts:
 | 0x07      | DIV      | Divide I1 by I2 and store the result in D          |
 | 0x08      | STAT     | Get the status at bit I1 and store the result in D |
 | 0x09      | SET      | Set the status at bit I1 to I2                     |
+| 0x0A      | PUSH     | Push the value of I1 onto the stack                |
+| 0x0B      | POP      | Pop a value off the stack and into I2              |
+| 0x0C      | JMP      | Set PC to the address in I1                        |
+| 0x0D      | LESS     | Run the next instruction only if I1 < I2           |
+| 0x0E      | LTE      | Run the next instruction only if I1 <= I2          |
+| 0x0F      | GT       | Run the next instruction only if I1 > I2           |
+| 0x10      | GTE      | Run the next instruction only if I1 >= I2          |
+| 0x11      | EQ       | Run the next instruction only if I1 = I2           |
+| 0x12      | CALL     | Set the PC to the address in I1                    |
+| 0x13      | RETURN   | Return to the last `CALL` location                 |
+
 
 
 ## Addressing registers
@@ -39,6 +50,7 @@ registers. The value 0xF refers to the **immediate data** in an instruction
 | 0x1       | R1       | Second ALU register  | 0x00          |
 | 0x2       | R2       | Third ALU register   | 0x00          |
 | 0x3       | R4       | Fourth ALU register  | 0x00          |
+| 0xB       | SP       | Stack pointer        | 0xFFE0        |
 | 0xC       | SR       | Status register      | 0x00          |
 | 0xD       | PC       | Program counter      | 0x100         |
 | 0xE       | IR       | Instruction register | 0x00          |
