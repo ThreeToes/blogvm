@@ -1,4 +1,4 @@
-module vm_blog
+module github.com/ThreeToes/blogvm
 
 go 1.18
 
