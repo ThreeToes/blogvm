@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"vm_blog/internal"
+	"vm_blog/internal/machine"
 )
 
 func main() {
@@ -23,8 +23,8 @@ func main() {
 		0x00000000, //0x10B: HALT
 	}
 
-	registers := internal.NewRegisterBank()
-	mem := internal.NewMemory()
+	registers := machine.NewRegisterBank()
+	mem := machine.NewMemory()
 	for i, p := range program {
 		err := mem.Write(uint32(i+0x100), p)
 		if err != nil {
@@ -33,15 +33,15 @@ func main() {
 			return
 		}
 	}
-	bus := internal.NewBus(mem)
-	cpu := internal.NewCPU(registers, bus)
+	bus := machine.NewBus(mem)
+	cpu := machine.NewCPU(registers, bus)
 
-	sr, err := registers.GetRegister(internal.SR)
+	sr, err := registers.GetRegister(machine.SR)
 	if err != nil {
 		fmt.Printf("Could not get the staus register: %v", err)
 		return
 	}
-	for sr.Value&internal.STATUS_HALT == 0 {
+	for sr.Value&machine.STATUS_HALT == 0 {
 		cpu.Tick()
 	}
 	val, err := mem.Read(0x1000)

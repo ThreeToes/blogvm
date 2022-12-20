@@ -1,4 +1,4 @@
-package internal
+package machine
 
 type MemoryRange struct {
 	Start uint32
