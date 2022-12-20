@@ -191,6 +191,113 @@ func (c *CPU) pop(_, i2 *Register) {
 	sp.Value++
 }
 
+func (c *CPU) jmp(i1, _ *Register) {
+	pc, err := c.registers.GetRegister(PC)
+
+	if err != nil {
+		panic(err)
+	}
+	pc.Value = i1.Value
+}
+
+func (c *CPU) less(i1, i2 *Register) {
+	if !(i1.Value < i2.Value) {
+		pc, err := c.registers.GetRegister(PC)
+		if err != nil {
+			panic(err)
+		}
+		pc.Value++
+	}
+}
+
+func (c *CPU) lte(i1, i2 *Register) {
+	if !(i1.Value <= i2.Value) {
+		pc, err := c.registers.GetRegister(PC)
+		if err != nil {
+			panic(err)
+		}
+		pc.Value++
+	}
+}
+
+func (c *CPU) gt(i1, i2 *Register) {
+	if !(i1.Value > i2.Value) {
+		pc, err := c.registers.GetRegister(PC)
+		if err != nil {
+			panic(err)
+		}
+		pc.Value++
+	}
+}
+
+func (c *CPU) gte(i1, i2 *Register) {
+	if !(i1.Value >= i2.Value) {
+		pc, err := c.registers.GetRegister(PC)
+		if err != nil {
+			panic(err)
+		}
+		pc.Value++
+	}
+}
+
+func (c *CPU) eq(i1, i2 *Register) {
+	if !(i1.Value == i2.Value) {
+		pc, err := c.registers.GetRegister(PC)
+		if err != nil {
+			panic(err)
+		}
+		pc.Value++
+	}
+}
+
+func (c *CPU) call(i1, _ *Register) {
+	sp, err := c.registers.GetRegister(SP)
+	if err != nil {
+		panic(err)
+	}
+	pc, err := c.registers.GetRegister(PC)
+	if err != nil {
+		panic(err)
+	}
+
+	sp.Value--
+	err = c.bus.Write(sp.Value, pc.Value)
+	if err != nil {
+		sr, err := c.registers.GetRegister(SR)
+		if err != nil {
+			panic(err)
+		}
+		sr.Value = sr.Value | STATUS_MEMORY_ERROR
+		return
+	}
+
+	pc.Value = i1.Value
+}
+
+func (c *CPU) ret(_, _ *Register) {
+	sp, err := c.registers.GetRegister(SP)
+	if err != nil {
+		panic(err)
+	}
+
+	val, err := c.bus.Read(sp.Value)
+	sp.Value++
+	if err != nil {
+		sr, err := c.registers.GetRegister(SR)
+		if err != nil {
+			panic(err)
+		}
+		sr.Value = sr.Value | STATUS_MEMORY_ERROR
+		return
+	}
+
+	pc, err := c.registers.GetRegister(PC)
+	if err != nil {
+		panic(err)
+	}
+	pc.Value = val
+}
+
 func (c *CPU) executeInstruction(instruction uint32) error {
 	opcode := uint8(instruction >> 24)
 	regIndex1 := uint8((instruction & 0x00F00000) >> 20)
@@ -241,6 +348,22 @@ func (c *CPU) executeInstruction(instruction uint32) error {
 		c.push(i1, i2)
 	case POP:
 		c.pop(i1, i2)
+	case JMP:
+		c.jmp(i1, i2)
+	case LESS:
+		c.less(i1, i2)
+	case LTE:
+		c.lte(i1, i2)
+	case GT:
+		c.gt(i1, i2)
+	case GTE:
+		c.gte(i1, i2)
+	case EQ:
+		c.eq(i1, i2)
+	case CALL:
+		c.call(i1, i2)
+	case RETURN:
+		c.ret(i1, i2)
 	default:
 		// Halt the machine if we can't figure out the instruction
 		c.set(&Register{1}, &Register{1})

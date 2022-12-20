@@ -7,7 +7,7 @@ import (
 
 func TestNewMemory(t *testing.T) {
 	got := NewMemory()
-	assert.Len(t, got.mem, 0xFFE0)
+	assert.Len(t, got.mem, 0xFFE1)
 	for _, v := range got.mem {
 		assert.Equal(t, uint32(0), v)
 	}

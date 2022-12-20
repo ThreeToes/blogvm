@@ -261,4 +261,139 @@ func TestCPU(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, uint32(0x10), registers.registerMap[R0].Value)
 	})
+	t.Run("test jmp", func(t *testing.T) {
+		registers := NewRegisterBank()
+		bus := NewBus(NewMemory())
+		cpu := NewCPU(registers, bus)
+
+		registers.registerMap[SR].Value = 0x00000000
+		registers.registerMap[R1].Value = 0x00
+		registers.registerMap[SP].Value = 0xFFDF
+		bus.Write(0x100, 0x0CF01000)
+
+		err := cpu.Tick()
+		assert.NoError(t, err)
+		assert.Equal(t, uint32(0x1000), registers.registerMap[PC].Value)
+	})
+	t.Run("test less", func(t *testing.T) {
+		registers := NewRegisterBank()
+		bus := NewBus(NewMemory())
+		cpu := NewCPU(registers, bus)
+
+		registers.registerMap[SR].Value = 0x00000000
+		registers.registerMap[R1].Value = 0x0FFF
+		registers.registerMap[SP].Value = 0xFFDF
+		bus.Write(0x100, 0x0DF11000)
+		bus.Write(0x102, 0x0DF10EEE)
+
+		err := cpu.Tick()
+		assert.NoError(t, err)
+		assert.Equal(t, uint32(0x102), registers.registerMap[PC].Value)
+
+		err = cpu.Tick()
+		assert.NoError(t, err)
+		assert.Equal(t, uint32(0x103), registers.registerMap[PC].Value)
+	})
+	t.Run("test lte", func(t *testing.T) {
+		registers := NewRegisterBank()
+		bus := NewBus(NewMemory())
+		cpu := NewCPU(registers, bus)
+
+		registers.registerMap[SR].Value = 0x00000000
+		registers.registerMap[R1].Value = 0x0FFF
+		registers.registerMap[SP].Value = 0xFFDF
+		bus.Write(0x100, 0x0EF11000)
+		bus.Write(0x102, 0x0EF10EEE)
+		bus.Write(0x103, 0x0EF10FFF)
+
+		err := cpu.Tick()
+		assert.NoError(t, err)
+		assert.Equal(t, uint32(0x102), registers.registerMap[PC].Value)
+
+		err = cpu.Tick()
+		assert.NoError(t, err)
+		assert.Equal(t, uint32(0x103), registers.registerMap[PC].Value)
+
+		err = cpu.Tick()
+		assert.NoError(t, err)
+		assert.Equal(t, uint32(0x104), registers.registerMap[PC].Value)
+	})
+	t.Run("test gt", func(t *testing.T) {
+		registers := NewRegisterBank()
+		bus := NewBus(NewMemory())
+		cpu := NewCPU(registers, bus)
+
+		registers.registerMap[SR].Value = 0x00000000
+		registers.registerMap[R1].Value = 0x0FFF
+		registers.registerMap[SP].Value = 0xFFDF
+		bus.Write(0x100, 0x0FF10EEE)
+		bus.Write(0x102, 0x0FF11000)
+
+		err := cpu.Tick()
+		assert.NoError(t, err)
+		assert.Equal(t, uint32(0x102), registers.registerMap[PC].Value)
+
+		err = cpu.Tick()
+		assert.NoError(t, err)
+		assert.Equal(t, uint32(0x103), registers.registerMap[PC].Value)
+	})
+	t.Run("test gte", func(t *testing.T) {
+		registers := NewRegisterBank()
+		bus := NewBus(NewMemory())
+		cpu := NewCPU(registers, bus)
+
+		registers.registerMap[SR].Value = 0x00000000
+		registers.registerMap[R1].Value = 0x0FFF
+		registers.registerMap[SP].Value = 0xFFDF
+		bus.Write(0x100, 0x10F10EEE)
+		bus.Write(0x102, 0x10F11000)
+		bus.Write(0x103, 0x10F11001)
+
+		err := cpu.Tick()
+		assert.NoError(t, err)
+		assert.Equal(t, uint32(0x102), registers.registerMap[PC].Value)
+
+		err = cpu.Tick()
+		assert.NoError(t, err)
+		assert.Equal(t, uint32(0x103), registers.registerMap[PC].Value)
+
+		err = cpu.Tick()
+		assert.NoError(t, err)
+		assert.Equal(t, uint32(0x104), registers.registerMap[PC].Value)
+	})
+	t.Run("test eq", func(t *testing.T) {
+		registers := NewRegisterBank()
+		bus := NewBus(NewMemory())
+		cpu := NewCPU(registers, bus)
+
+		registers.registerMap[SR].Value = 0x00000000
+		registers.registerMap[R1].Value = 0x1000
+		registers.registerMap[SP].Value = 0xFFDF
+		bus.Write(0x100, 0x11F10EEE)
+		bus.Write(0x102, 0x11F11000)
+
+		err := cpu.Tick()
+		assert.NoError(t, err)
+		assert.Equal(t, uint32(0x102), registers.registerMap[PC].Value)
+
+		err = cpu.Tick()
+		assert.NoError(t, err)
+		assert.Equal(t, uint32(0x103), registers.registerMap[PC].Value)
+	})
+	t.Run("test call/return", func(t *testing.T) {
+		registers := NewRegisterBank()
+		bus := NewBus(NewMemory())
+		cpu := NewCPU(registers, bus)
+
+		bus.Write(0x100, 0x12F10200)
+		bus.Write(0x200, 0x13F11000)
+
+		err := cpu.Tick()
+		assert.NoError(t, err)
+		assert.Equal(t, uint32(0x200), registers.registerMap[PC].Value)
+
+		err = cpu.Tick()
+		assert.NoError(t, err)
+		assert.Equal(t, uint32(0x101), registers.registerMap[PC].Value)
+	})
 }

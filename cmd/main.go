@@ -7,18 +7,20 @@ import (
 
 func main() {
 	// Load this in at mem[0x100]
-	// This program will copy the value 0x05 into R0, 0x10 into
-	// R1, and 0x1000 into R2, before executing an add on R0 & R1
-	// and writing the contents into the address in R2. If all is
-	// working, at the end of the program we should see the value
-	// 0x15 at memory address 0x1000
+	// This program will calculate the value of 10! (10*9*8...) and store it at address 0x1000
 	program := []uint32{
-		0x03F00005,
-		0x03F10010,
-		0x03F21000,
-		0x04010000,
-		0x02120000,
-		0x00000000,
+		0x03F00001, //0x100: COPY 0x01 R0
+		0x03F1000A, //0x101: COPY 0x0A R1
+		0x03F20001, //0x102: COPY 0x01 R2
+		0x06100000, //0x103: MUL R1 R0
+		0x11F10001, //0x104: EQ 0x01 R1
+		0x0CF0010A, //0x105: JMP 0x10A
+		0x05120000, //0x106: SUB R1 R2
+		0x03210000, //0x107: COPY R2 R1
+		0x03F20001, //0x108: COPY 0x01 R2
+		0x0CF00102, //0x109: JMP 0x102
+		0x020F1000, //0x10A: WRITE R0 0x1000
+		0x00000000, //0x10B: HALT
 	}
 
 	registers := internal.NewRegisterBank()
@@ -47,5 +49,6 @@ func main() {
 		fmt.Printf("could not read memory at 0x1000: %v\n", err)
 		return
 	}
-	fmt.Printf("The value at address 0x1000 is 0x%x\n", val)
+	// Value in memory should be 3628800
+	fmt.Printf("The value at address 0x1000 is %d\n", val)
 }
