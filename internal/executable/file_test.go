@@ -2,6 +2,7 @@ package executable
 
 import (
 	"bytes"
+	"github.com/stretchr/testify/assert"
 	"io"
 	"reflect"
 	"testing"
@@ -334,4 +335,72 @@ func TestLoad(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_wordToBytes(t *testing.T) {
+	assert.Equal(t, []byte{0x01, 0x02, 0x03, 0x04}, wordToBytes(0x01020304))
+}
+
+func TestLoadableFile_Save(t *testing.T) {
+	t.Run("successful save 1 block", func(t *testing.T) {
+		buf := bytes.NewBuffer([]byte{})
+		file := &LoadableFile{
+			BlockCount: 1,
+			Flags:      0,
+			Blocks: []*MemoryBlock{
+				{
+					Address:   0x100,
+					BlockSize: 2,
+					Words: []uint32{
+						0x1234,
+						0x5678,
+					},
+				},
+			},
+		}
+		err := file.Save(buf)
+		if !assert.NoError(t, err) {
+			return
+		}
+		assert.Equal(t, uintsToBytes(0x01, 0x0, 0x100, 0x02, 0x1234, 0x5678), buf.Bytes())
+	})
+	t.Run("successful save multi blocks", func(t *testing.T) {
+
+		buf := bytes.NewBuffer([]byte{})
+		file := &LoadableFile{
+			BlockCount: 3,
+			Flags:      0,
+			Blocks: []*MemoryBlock{
+				{
+					Address:   0x100,
+					BlockSize: 2,
+					Words: []uint32{
+						0x1234,
+						0x5678,
+					},
+				},
+				{
+					Address:   0x200,
+					BlockSize: 1,
+					Words: []uint32{
+						0x1234,
+					},
+				},
+				{
+					Address:   0x300,
+					BlockSize: 3,
+					Words: []uint32{
+						0x1234,
+						0x5678,
+						0x90,
+					},
+				},
+			},
+		}
+		err := file.Save(buf)
+		if !assert.NoError(t, err) {
+			return
+		}
+		assert.Equal(t, uintsToBytes(0x03, 0x0, 0x100, 0x02, 0x1234, 0x5678, 0x200, 0x01, 0x1234, 0x300, 0x03, 0x1234, 0x5678, 0x90), buf.Bytes())
+	})
 }
