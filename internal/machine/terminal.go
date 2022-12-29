@@ -36,7 +36,7 @@ func (t *TerminalDevice) Read(address uint32) (uint32, error) {
 func (t *TerminalDevice) Write(address, value uint32) error {
 	switch address {
 	case TERMINAL:
-		fmt.Print(rune(value))
+		fmt.Printf("%c", rune(value))
 	case TERMINAL_INT:
 		fmt.Printf("%d", value)
 	}

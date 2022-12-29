@@ -290,6 +290,30 @@ var directiveTable = directiveTableType{
 			return ret, nil
 		},
 	},
+	// Loads the address of a symbol into a register
+	"ADDRESS": {
+		mnemonic: "ADDRESS",
+		sizeCalc: func(_ string) uint32 {
+			return 1
+		},
+		assembleFunc: func(sourceLine string, symbolTable symbolTableType) ([]uint32, error) {
+			split := strings.Split(sourceLine, " ")
+			symbolIdx := 1
+			if split[0] != "ADDRESS" {
+				symbolIdx = 2
+			}
+			if len(split) <= symbolIdx+1 {
+				return nil, fmt.Errorf("ADDRESS directive did not have enough arguments")
+			}
+			symbolName := split[symbolIdx]
+			dest := split[symbolIdx+1]
+			if symbol, ok := symbolTable[symbolName]; ok {
+				instr := fmt.Sprintf("COPY %d %s", symbol.line, dest)
+				return opcodeTable["COPY"].assemble(instr, symbolTable)
+			}
+			return nil, fmt.Errorf("unrecognised symbol %q", symbolName)
+		},
+	},
 }
 
 type symbolType uint8
