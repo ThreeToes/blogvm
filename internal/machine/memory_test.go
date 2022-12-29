@@ -1,9 +1,9 @@
 package machine
 
 import (
+	"github.com/ThreeToes/blogvm/internal/executable"
 	"github.com/stretchr/testify/assert"
 	"testing"
-	"vm_blog/internal/executable"
 )
 
 func TestNewMemory(t *testing.T) {
