@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"vm_blog/internal/machine"
+	"github.com/ThreeToes/blogvm/internal/machine"
 )
 
 func main() {

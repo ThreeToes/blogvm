@@ -2,7 +2,7 @@ package machine
 
 import (
 	"fmt"
-	"vm_blog/internal/executable"
+	"github.com/ThreeToes/blogvm/internal/executable"
 )
 
 const maxMemorySize = 0xFFE1

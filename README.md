@@ -49,7 +49,7 @@ registers. The value 0xF refers to the **immediate data** in an instruction
 | 0x0       | R0       | First ALU register   | 0x00          |
 | 0x1       | R1       | Second ALU register  | 0x00          |
 | 0x2       | R2       | Third ALU register   | 0x00          |
-| 0x3       | R4       | Fourth ALU register  | 0x00          |
+| 0x3       | R3       | Fourth ALU register  | 0x00          |
 | 0xB       | SP       | Stack pointer        | 0xFFE0        |
 | 0xC       | SR       | Status register      | 0x00          |
 | 0xD       | PC       | Program counter      | 0x100         |

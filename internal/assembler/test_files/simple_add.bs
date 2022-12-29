@@ -1,0 +1,7 @@
+; Copy 0x05 into R0 and R1, add them together and store the result in 0x1000
+COPY 0x05 R0
+COPY 0x05 R1
+ADD R0 R1
+WRITE R1 SUM
+HALT
+SUM WORD 0x00
