@@ -249,6 +249,44 @@ func Test_directive_assemble(t *testing.T) {
 			want:    []uint32{0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x0},
 			wantErr: assert.NoError,
 		},
+		{
+			name:      "address valid symbol",
+			directive: directiveTable["ADDRESS"],
+			args: args{
+				sourceLine: "ADDRESS HELLO R1",
+				symbolTable: symbolTableType{
+					"HELLO": {
+						label:        "HELLO",
+						recordType:   directiveRecord,
+						line:         0x123,
+						directivePtr: directiveTable["WORD"],
+						opCodePtr:    nil,
+						source:       "WORD 0x33",
+					},
+				},
+			},
+			want:    []uint32{0x03F10123},
+			wantErr: assert.NoError,
+		},
+		{
+			name:      "address invalid symbol",
+			directive: directiveTable["ADDRESS"],
+			args: args{
+				sourceLine: "ADDRESS GOODBYE R1",
+				symbolTable: symbolTableType{
+					"HELLO": {
+						label:        "HELLO",
+						recordType:   directiveRecord,
+						line:         0x123,
+						directivePtr: directiveTable["WORD"],
+						opCodePtr:    nil,
+						source:       "WORD 0x33",
+					},
+				},
+			},
+			want:    nil,
+			wantErr: assert.Error,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
