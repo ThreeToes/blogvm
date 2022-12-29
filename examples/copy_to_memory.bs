@@ -1,0 +1,5 @@
+; Copies a value into a register and writes it to memory
+COPY 0x05 R0
+WRITE R0 DEST
+HALT
+DEST WORD 0x00

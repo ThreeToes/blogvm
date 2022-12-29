@@ -36,12 +36,13 @@ func main() {
 
 		registers := machine.NewRegisterBank()
 		mem := machine.NewMemory()
+		term := machine.NewTerminal()
 		err = mem.Load(assembled)
 		if err != nil {
 			fmt.Printf("could not load assembled program: %v\n", err)
 			return
 		}
-		bus := machine.NewBus(mem)
+		bus := machine.NewBus(mem, term)
 		cpu := machine.NewCPU(registers, bus)
 
 		sr, err := registers.GetRegister(machine.SR)
@@ -49,9 +50,13 @@ func main() {
 			fmt.Printf("Could not get the staus register: %v", err)
 			return
 		}
+		fmt.Println("Begin execution")
+		fmt.Println("-------")
 		for sr.Value&machine.STATUS_HALT == 0 {
 			cpu.Tick()
 		}
-		fmt.Printf("machine has halted\n")
+		fmt.Println()
+		fmt.Println("-------")
+		fmt.Println("Machine has halted")
 	}
 }

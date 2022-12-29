@@ -22,9 +22,9 @@ func AssembleString(input string) (*executable.LoadableFile, error) {
 }
 
 func Assemble(input io.Reader) (*executable.LoadableFile, error) {
-	firstPassF, symbols, err := firstPass(input)
+	symbolTable, firstPassF, err := firstPass(input)
 	if err != nil {
 		return nil, err
 	}
-	return secondPass(symbols, firstPassF)
+	return secondPass(firstPassF, symbolTable)
 }
