@@ -153,7 +153,8 @@ READ DEADBEEF R0`),
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1, err := firstPass(tt.args.sourceFile)
+			got := symbolTableType{}
+			got1, _, err := firstPass(tt.args.sourceFile, 0x100, got)
 			if !tt.wantErr(t, err, fmt.Sprintf("firstPass(%v)", tt.args.sourceFile)) {
 				return
 			}

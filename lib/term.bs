@@ -1,0 +1,7 @@
+; PRINTSTRING will print the string starting at the address in R0
+PRINTSTRING READ R0 R1
+EQ R1 0x00
+RETURN
+WRITE R1 0xFFE1
+ADD 0x01 R0
+JMP PRINTSTRING

@@ -7,6 +7,7 @@ type record struct {
 	directivePtr *directive
 	opCodePtr    *opCode
 	source       string
+	importFile   string
 }
 
 func (r *record) assemble(symbolTable symbolTableType) ([]uint32, error) {
