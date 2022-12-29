@@ -1,0 +1,15 @@
+; This program will calculate 10! and put it into a memory
+; word called FACTORIAL
+COPY 0x01 R0
+COPY 0x0A R1
+LOOP COPY 0x01 R2
+MUL R1 R0
+EQ 0x01 R1
+JMP END
+SUB R1 R2
+COPY R2 R1
+COPY 0x01 R2
+JMP LOOP
+END WRITE R0 FACTORIAL
+HALT
+FACTORIAL WORD 0x00
