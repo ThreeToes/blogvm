@@ -2,36 +2,37 @@ package main
 
 import (
 	"fmt"
+	"github.com/ThreeToes/blogvm/internal/assembler"
 	"github.com/ThreeToes/blogvm/internal/machine"
 )
 
+var program = `COPY 0x01 R0
+COPY 0x0A R1
+LOOP COPY 0x01 R2
+MUL R1 R0
+EQ 0x01 R1
+JMP END
+SUB R1 R2
+COPY R2 R1
+COPY 0x01 R2
+JMP LOOP
+END WRITE R0 0x1000
+HALT
+`
+
 func main() {
-	// Load this in at mem[0x100]
-	// This program will calculate the value of 10! (10*9*8...) and store it at address 0x1000
-	program := []uint32{
-		0x03F00001, //0x100: COPY 0x01 R0
-		0x03F1000A, //0x101: COPY 0x0A R1
-		0x03F20001, //0x102: COPY 0x01 R2
-		0x06100000, //0x103: MUL R1 R0
-		0x11F10001, //0x104: EQ 0x01 R1
-		0x0CF0010A, //0x105: JMP 0x10A
-		0x05120000, //0x106: SUB R1 R2
-		0x03210000, //0x107: COPY R2 R1
-		0x03F20001, //0x108: COPY 0x01 R2
-		0x0CF00102, //0x109: JMP 0x102
-		0x020F1000, //0x10A: WRITE R0 0x1000
-		0x00000000, //0x10B: HALT
+	assembled, err := assembler.AssembleString(program)
+	if err != nil {
+		fmt.Printf("could not assemble program: %v", err)
+		return
 	}
 
 	registers := machine.NewRegisterBank()
 	mem := machine.NewMemory()
-	for i, p := range program {
-		err := mem.Write(uint32(i+0x100), p)
-		if err != nil {
-			fmt.Printf("error writing to memory location 0x%x: %v\n",
-				i, err)
-			return
-		}
+	err = mem.Load(assembled)
+	if err != nil {
+		fmt.Printf("could not load assembled program: %v", err)
+		return
 	}
 	bus := machine.NewBus(mem)
 	cpu := machine.NewCPU(registers, bus)
