@@ -9,27 +9,27 @@ import (
 	"strings"
 )
 
-func AssembleFile(filePath string) (*executable.LoadableFile, error) {
+func AssembleFile(filePath string, includePaths []string) (*executable.LoadableFile, error) {
 	f, err := os.Open(filePath)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
-	return Assemble(f)
+	return Assemble(f, includePaths)
 }
 
-func AssembleString(input string) (*executable.LoadableFile, error) {
+func AssembleString(input string, includePaths []string) (*executable.LoadableFile, error) {
 	reader := strings.NewReader(input)
-	return Assemble(reader)
+	return Assemble(reader, includePaths)
 }
 
-func Assemble(input io.Reader) (*executable.LoadableFile, error) {
+func Assemble(input io.Reader, includePaths []string) (*executable.LoadableFile, error) {
 	firstPassF, err := firstPass(input, 0x100)
 	if err != nil {
 		return nil, err
 	}
 
-	imports, err := assembleImports(firstPassF)
+	imports, err := assembleImports(firstPassF, includePaths)
 	if err != nil {
 		return nil, err
 	}
@@ -57,18 +57,13 @@ func Assemble(input io.Reader) (*executable.LoadableFile, error) {
 	return secondPass(firstPassF)
 }
 
-func assembleImports(records *relocatableFile) (*relocatableFile, error) {
+func assembleImports(records *relocatableFile, includePaths []string) (*relocatableFile, error) {
 	ret := newRelocatableFile()
-	wd, err := os.Getwd()
-	if err != nil {
-		return nil, err
-	}
-	libPath := filepath.Join(wd, "lib")
 	for _, rec := range records.records {
 		if rec.symbolType != IMPORT {
 			continue
 		}
-		f, err := findFile(rec.sourceLine, []string{libPath})
+		f, err := findFile(rec.sourceLine, includePaths)
 		if err != nil {
 			return nil, err
 		}
@@ -81,7 +76,7 @@ func assembleImports(records *relocatableFile) (*relocatableFile, error) {
 		if err != nil {
 			return nil, err
 		}
-		recs, err := assembleImports(pass)
+		recs, err := assembleImports(pass, includePaths)
 		if err != nil {
 			return nil, err
 		}

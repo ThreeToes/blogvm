@@ -6,7 +6,19 @@ import (
 	"github.com/ThreeToes/blogvm/internal/assembler"
 	"github.com/ThreeToes/blogvm/internal/machine"
 	"os"
+	"path/filepath"
 )
+
+type includeArgs []string
+
+func (i *includeArgs) String() string {
+	return fmt.Sprintln(*i)
+}
+
+func (i *includeArgs) Set(s string) error {
+	*i = append(*i, s)
+	return nil
+}
 
 func main() {
 	if len(os.Args) == 1 {
@@ -16,9 +28,24 @@ func main() {
 	}
 	switch os.Args[1] {
 	case "run":
+		wd, err := os.Getwd()
+		if err != nil {
+			fmt.Printf("error getting working directory: %v\n", err)
+			return
+		}
+		execPath, err := os.Executable()
+		if err != nil {
+			fmt.Printf("error getting executable path: %v\n", err)
+			return
+		}
+		libPath := filepath.Join(filepath.Dir(execPath), "lib")
+		wdLib := filepath.Join(wd, "lib")
+		includes := includeArgs{libPath, wd, wdLib}
+
 		fs := flag.NewFlagSet("run", flag.ExitOnError)
 		filePath := fs.String("file", "", "path to the file to run")
-		err := fs.Parse(os.Args[2:])
+		flag.Var(&includes, "include", "add this folder to standard include paths")
+		err = fs.Parse(os.Args[2:])
 		if err != nil {
 			fmt.Printf("could not parse args: %v\n", err)
 			return
@@ -28,7 +55,7 @@ func main() {
 			fs.Usage()
 			return
 		}
-		assembled, err := assembler.AssembleFile(*filePath)
+		assembled, err := assembler.AssembleFile(*filePath, includes)
 		if err != nil {
 			fmt.Printf("could not assemble program: %v\n", err)
 			return
