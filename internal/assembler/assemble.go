@@ -34,6 +34,26 @@ func Assemble(input io.Reader) (*executable.LoadableFile, error) {
 		return nil, err
 	}
 	err = firstPassF.merge(imports)
+	if err != nil {
+		return nil, err
+	}
+	var errs []error
+	for _, v := range firstPassF.symbolTable {
+		switch v.symbolType {
+		case MTDF:
+			errs = append(errs, fmt.Errorf("duplicate symbol %q line %d: %s", v.label, v.relativeLineNumber, v.sourceLine))
+		case INVALID:
+			errs = append(errs, fmt.Errorf("invalid line %d: %q", v.relativeLineNumber, v.sourceLine))
+		}
+	}
+	if err != nil {
+		errString := &strings.Builder{}
+		errString.WriteString("following errors found:")
+		for _, err := range errs {
+			errString.WriteString(fmt.Sprintf("\n\t* %v", err))
+		}
+		return nil, fmt.Errorf(errString.String())
+	}
 	return secondPass(firstPassF)
 }
 
