@@ -1,9 +1,15 @@
 package machine
 
-import "fmt"
+import (
+	"bufio"
+	"fmt"
+	"os"
+)
 
 // TerminalDevice is a bus device that backs directly onto a real terminal
-type TerminalDevice struct{}
+type TerminalDevice struct {
+	consoleReader *bufio.Reader
+}
 
 const (
 	TERMINAL = uint32(0xFFE1) + iota
@@ -27,9 +33,8 @@ func (t *TerminalDevice) MemoryRange() *MemoryRange {
 }
 
 func (t *TerminalDevice) Read(address uint32) (uint32, error) {
-	switch address {
-	// TODO: read values
-	}
+	// By default, Go doesn't provide a way to get unbuffered input from the console.
+	// Will leave this to the UI when I get to that
 	return 0, nil
 }
 
@@ -44,5 +49,7 @@ func (t *TerminalDevice) Write(address, value uint32) error {
 }
 
 func NewTerminal() *TerminalDevice {
-	return &TerminalDevice{}
+	return &TerminalDevice{
+		consoleReader: bufio.NewReader(os.Stdin),
+	}
 }

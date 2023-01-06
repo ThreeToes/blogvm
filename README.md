@@ -69,8 +69,15 @@ bit.
 
 | Bit number | Mnemonic              | Description                                                     |
 |------------|-----------------------|-----------------------------------------------------------------|
-| 1          | STATUS_HALT           | Whether the machine has been halted                             |
-| 2          | STATUS_OVERFLOW       | If an integer overflow has occurred                             |
-| 3          | STATUS_UNDERFLOW      | If an integer underflow has occurred                            |
-| 4          | STATUS_DIVIDE_BY_ZERO | If the machine has attempted to divide a number by zero         |
-| 5          | STATUS_MEMORY_ERROR   | If the machine has experienced an error trying to access memory |
+| 0          | STATUS_HALT           | Whether the machine has been halted                             |
+| 1          | STATUS_OVERFLOW       | If an integer overflow has occurred                             |
+| 2          | STATUS_UNDERFLOW      | If an integer underflow has occurred                            |
+| 3          | STATUS_DIVIDE_BY_ZERO | If the machine has attempted to divide a number by zero         |
+| 4          | STATUS_MEMORY_ERROR   | If the machine has experienced an error trying to access memory |
+
+## Todos
+* Interrupts
+* Bitwise operations
+* UI
+* Console
+* Small screen
