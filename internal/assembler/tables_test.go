@@ -192,9 +192,8 @@ func Test_opCode_assemble(t *testing.T) {
 
 func Test_directive_assemble(t *testing.T) {
 	type fields struct {
-		mnemonic     string
-		sizeCalc     func(sourceLine string) uint32
-		assembleFunc func(sourceLine string, symbolTable symbolTableType) ([]uint32, error)
+		mnemonic string
+		sizeCalc func(sourceLine string) uint32
 	}
 	type args struct {
 		sourceLine  string

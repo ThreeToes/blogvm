@@ -38,6 +38,13 @@ Instructions consist of four parts:
 | 0x12      | CALL     | Set the PC to the address in I1                    |
 | 0x13      | RETURN   | Return to the last `CALL` location                 |
 
+## Assembler Directives
+| Directive | Description                               |
+|-----------|-------------------------------------------|
+| WORD      | Sets a memory location to a certain value |
+| STRING    | Inserts a into a chunk of memory          |
+| ADDRESS   | Sets I2 to an address of a label          |
+
 
 
 ## Addressing registers

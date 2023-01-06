@@ -7,21 +7,6 @@ import (
 	"strings"
 )
 
-type recordType uint8
-
-const (
-	instructionRecord recordType = iota
-	directiveRecord
-	commentRecord
-	invalidRecord
-	importRecord
-	duplicateSymbolRecord
-)
-
-type symbolTableType map[string]*record
-
-type firstPassFile []*record
-
 func firstPass(sourceFile io.Reader, lineNum uint32) (*relocatableFile, error) {
 	ln := lineNum
 	src := bufio.NewReader(sourceFile)
