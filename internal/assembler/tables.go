@@ -316,14 +316,6 @@ var directiveTable = directiveTableType{
 	},
 }
 
-type symbolType uint8
-
-const (
-	REL symbolType = iota
-	ABS
-	MTDF
-)
-
 type register struct {
 	mnemonic string
 	nibble   uint8
