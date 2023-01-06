@@ -16,10 +16,9 @@ func Test_firstPassLine(t *testing.T) {
 			return
 		}
 		assert.Equal(t, "", rec.label)
-		assert.Equal(t, opcodeTable["ADD"], rec.opCodePtr)
-		assert.Nil(t, rec.directivePtr)
-		assert.Equal(t, uint32(10), rec.line)
-		assert.Equal(t, line, rec.source)
+		assert.Equal(t, opcodeTable["ADD"], rec.assemblyLink)
+		assert.Equal(t, uint32(10), rec.relativeLineNumber)
+		assert.Equal(t, line, rec.sourceLine)
 	})
 	t.Run("test op code record with label", func(t *testing.T) {
 		const line = "YEEHAW ADD 0x10 R1"
@@ -28,10 +27,9 @@ func Test_firstPassLine(t *testing.T) {
 			return
 		}
 		assert.Equal(t, "YEEHAW", rec.label)
-		assert.Equal(t, opcodeTable["ADD"], rec.opCodePtr)
-		assert.Nil(t, rec.directivePtr)
-		assert.Equal(t, uint32(10), rec.line)
-		assert.Equal(t, line, rec.source)
+		assert.Equal(t, opcodeTable["ADD"], rec.assemblyLink)
+		assert.Equal(t, uint32(10), rec.relativeLineNumber)
+		assert.Equal(t, line, rec.sourceLine)
 	})
 	t.Run("test directive no label", func(t *testing.T) {
 		const line = "WORD 0x7FFF"
@@ -40,10 +38,9 @@ func Test_firstPassLine(t *testing.T) {
 			return
 		}
 		assert.Equal(t, "", rec.label)
-		assert.Equal(t, directiveTable["WORD"], rec.directivePtr)
-		assert.Nil(t, rec.opCodePtr)
-		assert.Equal(t, uint32(10), rec.line)
-		assert.Equal(t, line, rec.source)
+		assert.Equal(t, directiveTable["WORD"], rec.assemblyLink)
+		assert.Equal(t, uint32(10), rec.relativeLineNumber)
+		assert.Equal(t, line, rec.sourceLine)
 	})
 	t.Run("test directive with label", func(t *testing.T) {
 		const line = "IMPORTANTNUMBER WORD 0x7FFF"
@@ -52,10 +49,9 @@ func Test_firstPassLine(t *testing.T) {
 			return
 		}
 		assert.Equal(t, "IMPORTANTNUMBER", rec.label)
-		assert.Equal(t, directiveTable["WORD"], rec.directivePtr)
-		assert.Nil(t, rec.opCodePtr)
-		assert.Equal(t, uint32(10), rec.line)
-		assert.Equal(t, line, rec.source)
+		assert.Equal(t, directiveTable["WORD"], rec.assemblyLink)
+		assert.Equal(t, uint32(10), rec.relativeLineNumber)
+		assert.Equal(t, line, rec.sourceLine)
 	})
 	t.Run("test comment without label", func(t *testing.T) {
 		const line = ";IMPORTANTNUMBER WORD 0x7FFF"
@@ -64,11 +60,9 @@ func Test_firstPassLine(t *testing.T) {
 			return
 		}
 		assert.Equal(t, "", rec.label)
-		assert.Equal(t, commentRecord, rec.recordType)
-		assert.Nil(t, rec.directivePtr)
-		assert.Nil(t, rec.opCodePtr)
-		assert.Equal(t, uint32(10), rec.line)
-		assert.Equal(t, line, rec.source)
+		assert.Equal(t, COMMENT, rec.symbolType)
+		assert.Equal(t, uint32(10), rec.relativeLineNumber)
+		assert.Equal(t, line, rec.sourceLine)
 	})
 	t.Run("test comment with label", func(t *testing.T) {
 		const line = "SOMECOMMENT ;this is a comment"
@@ -77,11 +71,10 @@ func Test_firstPassLine(t *testing.T) {
 			return
 		}
 		assert.Equal(t, "SOMECOMMENT", rec.label)
-		assert.Equal(t, commentRecord, rec.recordType)
-		assert.Nil(t, rec.directivePtr)
-		assert.Nil(t, rec.opCodePtr)
-		assert.Equal(t, uint32(10), rec.line)
-		assert.Equal(t, line, rec.source)
+		assert.Equal(t, COMMENT, rec.symbolType)
+		assert.Nil(t, rec.assemblyLink)
+		assert.Equal(t, uint32(10), rec.relativeLineNumber)
+		assert.Equal(t, line, rec.sourceLine)
 	})
 }
 
@@ -90,26 +83,26 @@ func Test_firstPass(t *testing.T) {
 		sourceFile io.Reader
 	}
 	tests := []struct {
-		name        string
-		args        args
-		symbolTable symbolTableType
-		passFile    firstPassFile
-		wantErr     assert.ErrorAssertionFunc
+		name     string
+		args     args
+		passFile *relocatableFile
+		wantErr  assert.ErrorAssertionFunc
 	}{
 		{
 			name: "single line",
 			args: args{
 				sourceFile: strings.NewReader("ADD R0 R1"),
 			},
-			symbolTable: symbolTableType{},
-			passFile: firstPassFile{
-				{
-					label:        "",
-					recordType:   instructionRecord,
-					line:         0x100,
-					directivePtr: nil,
-					opCodePtr:    opcodeTable["ADD"],
-					source:       "ADD R0 R1",
+			passFile: &relocatableFile{
+				symbolTable: symbols{},
+				records: []*symbol{
+					{
+						symbolType:         REL,
+						label:              "",
+						relativeLineNumber: 0x100,
+						sourceLine:         "ADD R0 R1",
+						assemblyLink:       opcodeTable["ADD"],
+					},
 				},
 			},
 			wantErr: assert.NoError,
@@ -120,32 +113,31 @@ func Test_firstPass(t *testing.T) {
 				sourceFile: strings.NewReader(`DEADBEEF WORD 0xDEADBEEF
 READ DEADBEEF R0`),
 			},
-			symbolTable: symbolTableType{
-				"DEADBEEF": {
-					label:        "DEADBEEF",
-					recordType:   directiveRecord,
-					line:         0x100,
-					directivePtr: directiveTable["WORD"],
-					opCodePtr:    nil,
-					source:       "DEADBEEF WORD 0xDEADBEEF",
+			passFile: &relocatableFile{
+				symbolTable: symbols{
+					"DEADBEEF": {
+						symbolType:         REL,
+						label:              "DEADBEEF",
+						relativeLineNumber: 0x100,
+						sourceLine:         "DEADBEEF WORD 0xDEADBEEF",
+						assemblyLink:       directiveTable["WORD"],
+					},
 				},
-			},
-			passFile: firstPassFile{
-				{
-					label:        "DEADBEEF",
-					recordType:   directiveRecord,
-					line:         0x100,
-					directivePtr: directiveTable["WORD"],
-					opCodePtr:    nil,
-					source:       "DEADBEEF WORD 0xDEADBEEF",
-				},
-				{
-					label:        "",
-					recordType:   instructionRecord,
-					line:         0x101,
-					directivePtr: nil,
-					opCodePtr:    opcodeTable["READ"],
-					source:       "READ DEADBEEF R0",
+				records: []*symbol{
+					{
+						symbolType:         REL,
+						label:              "DEADBEEF",
+						relativeLineNumber: 0x100,
+						sourceLine:         "DEADBEEF WORD 0xDEADBEEF",
+						assemblyLink:       directiveTable["WORD"],
+					},
+					{
+						symbolType:         REL,
+						label:              "",
+						relativeLineNumber: 0x101,
+						sourceLine:         "READ DEADBEEF R0",
+						assemblyLink:       opcodeTable["READ"],
+					},
 				},
 			},
 			wantErr: assert.NoError,
@@ -153,12 +145,10 @@ READ DEADBEEF R0`),
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := symbolTableType{}
-			got1, _, err := firstPass(tt.args.sourceFile, 0x100, got)
+			got1, err := firstPass(tt.args.sourceFile, 0x100)
 			if !tt.wantErr(t, err, fmt.Sprintf("firstPass(%v)", tt.args.sourceFile)) {
 				return
 			}
-			assert.Equalf(t, tt.symbolTable, got, "firstPass(%v)", tt.args.sourceFile)
 			assert.Equalf(t, tt.passFile, got1, "firstPass(%v)", tt.args.sourceFile)
 		})
 	}

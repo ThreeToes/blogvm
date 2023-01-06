@@ -6,6 +6,9 @@ const (
 	REL symbolType = iota
 	ABS
 	MTDF
+	INVALID
+	IMPORT
+	COMMENT
 )
 
 type symbol struct {
@@ -14,6 +17,13 @@ type symbol struct {
 	relativeLineNumber uint32
 	sourceLine         string
 	assemblyLink       assemblable
+}
+
+func (s *symbol) assemble(symbolTable symbols) ([]uint32, error) {
+	if s.assemblyLink != nil {
+		return s.assemblyLink.assemble(s.sourceLine, symbolTable)
+	}
+	return nil, nil
 }
 
 type symbols map[string]*symbol

@@ -2,7 +2,7 @@ package assembler
 
 import "github.com/ThreeToes/blogvm/internal/executable"
 
-func secondPass(firstPass firstPassFile, symbolTable symbolTableType) (*executable.LoadableFile, error) {
+func secondPass(firstPass *relocatableFile) (*executable.LoadableFile, error) {
 	ret := &executable.LoadableFile{
 		BlockCount: 0x1,
 		Flags:      0,
@@ -13,8 +13,11 @@ func secondPass(firstPass firstPassFile, symbolTable symbolTableType) (*executab
 		BlockSize: 0,
 		Words:     nil,
 	}
-	for _, rec := range firstPass {
-		words, err := rec.assemble(symbolTable)
+	for _, rec := range firstPass.records {
+		if rec.assemblyLink == nil {
+			continue
+		}
+		words, err := rec.assemble(firstPass.symbolTable)
 		if err != nil {
 			return nil, err
 		}

@@ -24,55 +24,54 @@ func AssembleString(input string) (*executable.LoadableFile, error) {
 }
 
 func Assemble(input io.Reader) (*executable.LoadableFile, error) {
-	symbolTable := symbolTableType{}
-	firstPassF, lineNum, err := firstPass(input, 0x100, symbolTable)
+	firstPassF, err := firstPass(input, 0x100)
 	if err != nil {
 		return nil, err
 	}
 
-	imports, _, err := assembleImports(firstPassF, lineNum, symbolTable)
+	imports, err := assembleImports(firstPassF)
 	if err != nil {
 		return nil, err
 	}
-	firstPassF = append(firstPassF, imports...)
-	return secondPass(firstPassF, symbolTable)
+	err = firstPassF.merge(imports)
+	return secondPass(firstPassF)
 }
 
-func assembleImports(records []*record, lineNum uint32, symbolTable symbolTableType) ([]*record, uint32, error) {
-	var ret []*record
-	ln := lineNum
+func assembleImports(records *relocatableFile) (*relocatableFile, error) {
+	ret := newRelocatableFile()
 	wd, err := os.Getwd()
 	if err != nil {
-		return nil, ln, err
+		return nil, err
 	}
 	libPath := filepath.Join(wd, "lib")
-	for _, rec := range records {
-		if rec.recordType != importRecord {
+	for _, rec := range records.records {
+		if rec.symbolType != IMPORT {
 			continue
 		}
-		f, err := findFile(rec.importFile, []string{libPath})
+		f, err := findFile(rec.sourceLine, []string{libPath})
 		if err != nil {
-			return nil, ln, err
+			return nil, err
 		}
-		pass, lineNo, err := firstPass(f, ln, symbolTable)
+		pass, err := firstPass(f, 0)
 		f.Close()
 		if err != nil {
-			return nil, ln, err
+			return nil, err
 		}
-		ln = lineNo
-		ret = append(ret, pass...)
-		recs, lineNo, err := assembleImports(pass, lineNo, symbolTable)
+		err = ret.merge(pass)
 		if err != nil {
-			return nil, 0, err
+			return nil, err
 		}
-		ln = lineNo
-		ret = append(ret, recs...)
+		recs, err := assembleImports(pass)
+		if err != nil {
+			return nil, err
+		}
+		err = ret.merge(recs)
 	}
-	return ret, ln, nil
+	return ret, nil
 }
 
 func findFile(fileName string, searchPath []string) (*os.File, error) {
-	fn := fileName
+	fn := strings.TrimPrefix(fileName, "IMPORT ")
 	if !strings.HasSuffix(fn, ".bs") {
 		fn = fmt.Sprintf("%s.bs", fn)
 	}

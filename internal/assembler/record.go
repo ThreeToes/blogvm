@@ -10,7 +10,7 @@ type record struct {
 	importFile   string
 }
 
-func (r *record) assemble(symbolTable symbolTableType) ([]uint32, error) {
+func (r *record) assemble(symbolTable symbols) ([]uint32, error) {
 	if r.opCodePtr != nil {
 		return r.opCodePtr.assemble(r.source, symbolTable)
 	} else if r.directivePtr != nil {

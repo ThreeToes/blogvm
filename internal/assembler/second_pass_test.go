@@ -9,8 +9,7 @@ import (
 
 func Test_secondPass(t *testing.T) {
 	type args struct {
-		firstPass   firstPassFile
-		symbolTable symbolTableType
+		firstPass *relocatableFile
 	}
 	tests := []struct {
 		name    string
@@ -21,17 +20,18 @@ func Test_secondPass(t *testing.T) {
 		{
 			name: "no symbols",
 			args: args{
-				firstPass: firstPassFile{
-					{
-						label:        "",
-						recordType:   instructionRecord,
-						line:         0,
-						directivePtr: nil,
-						opCodePtr:    opcodeTable["ADD"],
-						source:       "ADD R1 R2",
+				firstPass: &relocatableFile{
+					symbolTable: symbols{},
+					records: []*symbol{
+						{
+							symbolType:         REL,
+							label:              "",
+							relativeLineNumber: 0,
+							sourceLine:         "ADD R1 R2",
+							assemblyLink:       opcodeTable["ADD"],
+						},
 					},
 				},
-				symbolTable: nil,
 			},
 			want: &executable.LoadableFile{
 				BlockCount: 0x01,
@@ -51,11 +51,11 @@ func Test_secondPass(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := secondPass(tt.args.firstPass, tt.args.symbolTable)
-			if !tt.wantErr(t, err, fmt.Sprintf("secondPass(%v, %v)", tt.args.firstPass, tt.args.symbolTable)) {
+			got, err := secondPass(tt.args.firstPass)
+			if !tt.wantErr(t, err, fmt.Sprintf("secondPass(%v)", tt.args.firstPass)) {
 				return
 			}
-			assert.Equalf(t, tt.want, got, "secondPass(%v, %v)", tt.args.firstPass, tt.args.symbolTable)
+			assert.Equalf(t, tt.want, got, "secondPass(%v)", tt.args.firstPass)
 		})
 	}
 }

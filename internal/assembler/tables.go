@@ -8,7 +8,7 @@ import (
 
 type assemblable interface {
 	calculateSize(sourceLine string) uint32
-	assemble(sourceLine string, symbolTable symbolTableType) ([]uint32, error)
+	assemble(sourceLine string, symbolTable symbols) ([]uint32, error)
 }
 
 type opCode struct {
@@ -28,7 +28,7 @@ func (o *opCode) calculateSize(sourceLine string) uint32 {
 	return 1
 }
 
-func (o *opCode) assemble(sourceLine string, symbolTable symbolTableType) ([]uint32, error) {
+func (o *opCode) assemble(sourceLine string, symbolTable symbols) ([]uint32, error) {
 	curIdx := 1
 	instruction := uint32(o.opcode) << 24
 	cols := strings.Split(sourceLine, " ")
@@ -45,7 +45,7 @@ func (o *opCode) assemble(sourceLine string, symbolTable symbolTableType) ([]uin
 			instruction = instruction | (nibble << 20)
 		} else if symbol, ok := symbolTable[arg]; ok && o.allowSymbols {
 			// Try resolving a symbol
-			instruction = instruction | (0xF << 20) | (symbol.line & 0xFFFF)
+			instruction = instruction | (0xF << 20) | (symbol.relativeLineNumber & 0xFFFF)
 		} else {
 			// Try to parse immediate data
 			p, err := parseLiteral(arg)
@@ -66,7 +66,7 @@ func (o *opCode) assemble(sourceLine string, symbolTable symbolTableType) ([]uin
 			nibble := uint32(reg.nibble)
 			instruction = instruction | (nibble << 16)
 		} else if symbol, ok := symbolTable[arg]; ok && o.allowSymbols {
-			instruction = instruction | (0xF << 16) | (symbol.line & 0xFFFF)
+			instruction = instruction | (0xF << 16) | (symbol.relativeLineNumber & 0xFFFF)
 		} else {
 			p, err := parseLiteral(arg)
 			if err != nil {
@@ -225,14 +225,14 @@ func (o opcodeTableType) reverseLookup(opcode uint8) *opCode {
 type directive struct {
 	mnemonic     string
 	sizeCalc     func(sourceLine string) uint32
-	assembleFunc func(sourceLine string, symbolTable symbolTableType) ([]uint32, error)
+	assembleFunc func(sourceLine string, symbolTable symbols) ([]uint32, error)
 }
 
 func (d *directive) calculateSize(sourceLine string) uint32 {
 	return d.sizeCalc(sourceLine)
 }
 
-func (d *directive) assemble(sourceLine string, symbolTable symbolTableType) ([]uint32, error) {
+func (d *directive) assemble(sourceLine string, symbolTable symbols) ([]uint32, error) {
 	return d.assembleFunc(sourceLine, symbolTable)
 }
 
@@ -245,7 +245,7 @@ var directiveTable = directiveTableType{
 			// Always one line long
 			return 1
 		},
-		assembleFunc: func(sourceLine string, _ symbolTableType) ([]uint32, error) {
+		assembleFunc: func(sourceLine string, _ symbols) ([]uint32, error) {
 			spl := strings.Split(sourceLine, " ")
 			col := 1
 			if len(spl) > 2 {
@@ -274,7 +274,7 @@ var directiveTable = directiveTableType{
 			}
 			return uint32(len(split[1]) + 1)
 		},
-		assembleFunc: func(sourceLine string, _ symbolTableType) ([]uint32, error) {
+		assembleFunc: func(sourceLine string, _ symbols) ([]uint32, error) {
 			split := strings.SplitN(sourceLine, " ", 2)
 			if split[0] != "STRING" {
 				split = strings.SplitN(split[1], " ", 2)
@@ -296,7 +296,7 @@ var directiveTable = directiveTableType{
 		sizeCalc: func(_ string) uint32 {
 			return 1
 		},
-		assembleFunc: func(sourceLine string, symbolTable symbolTableType) ([]uint32, error) {
+		assembleFunc: func(sourceLine string, symbolTable symbols) ([]uint32, error) {
 			split := strings.Split(sourceLine, " ")
 			symbolIdx := 1
 			if split[0] != "ADDRESS" {
@@ -308,7 +308,7 @@ var directiveTable = directiveTableType{
 			symbolName := split[symbolIdx]
 			dest := split[symbolIdx+1]
 			if symbol, ok := symbolTable[symbolName]; ok {
-				instr := fmt.Sprintf("COPY %d %s", symbol.line, dest)
+				instr := fmt.Sprintf("COPY %d %s", symbol.relativeLineNumber, dest)
 				return opcodeTable["COPY"].assemble(instr, symbolTable)
 			}
 			return nil, fmt.Errorf("unrecognised symbol %q", symbolName)

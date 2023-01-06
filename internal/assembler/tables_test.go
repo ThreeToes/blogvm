@@ -60,7 +60,7 @@ func Test_directive_size_calcs(t *testing.T) {
 func Test_opCode_assemble(t *testing.T) {
 	type args struct {
 		sourceLine  string
-		symbolTable symbolTableType
+		symbolTable symbols
 	}
 	tests := []struct {
 		name    string
@@ -74,7 +74,7 @@ func Test_opCode_assemble(t *testing.T) {
 			opCode: opcodeTable["HALT"],
 			args: args{
 				sourceLine:  "HALT",
-				symbolTable: symbolTableType{},
+				symbolTable: symbols{},
 			},
 			want:    []uint32{0x00000000},
 			wantErr: assert.NoError,
@@ -85,7 +85,7 @@ func Test_opCode_assemble(t *testing.T) {
 			opCode: opcodeTable["ADD"],
 			args: args{
 				sourceLine:  "ADD R1 0x50",
-				symbolTable: symbolTableType{},
+				symbolTable: symbols{},
 			},
 			want:    []uint32{0x041F0050},
 			wantErr: assert.NoError,
@@ -95,7 +95,7 @@ func Test_opCode_assemble(t *testing.T) {
 			opCode: opcodeTable["ADD"],
 			args: args{
 				sourceLine:  "MAGIC ADD 0x50 R3",
-				symbolTable: symbolTableType{},
+				symbolTable: symbols{},
 			},
 			want:    []uint32{0x04F30050},
 			wantErr: assert.NoError,
@@ -105,7 +105,7 @@ func Test_opCode_assemble(t *testing.T) {
 			opCode: opcodeTable["ADD"],
 			args: args{
 				sourceLine:  "MAGIC ADD 15 R3",
-				symbolTable: symbolTableType{},
+				symbolTable: symbols{},
 			},
 			want:    []uint32{0x04F3000F},
 			wantErr: assert.NoError,
@@ -115,7 +115,7 @@ func Test_opCode_assemble(t *testing.T) {
 			opCode: opcodeTable["ADD"],
 			args: args{
 				sourceLine:  "MAGIC ADD 012 R3",
-				symbolTable: symbolTableType{},
+				symbolTable: symbols{},
 			},
 			want:    []uint32{0x04F3000A},
 			wantErr: assert.NoError,
@@ -125,7 +125,7 @@ func Test_opCode_assemble(t *testing.T) {
 			opCode: opcodeTable["ADD"],
 			args: args{
 				sourceLine:  "MAGIC ADD 0b101 R3",
-				symbolTable: symbolTableType{},
+				symbolTable: symbols{},
 			},
 			want:    []uint32{0x04F30005},
 			wantErr: assert.NoError,
@@ -135,14 +135,13 @@ func Test_opCode_assemble(t *testing.T) {
 			opCode: opcodeTable["ADD"],
 			args: args{
 				sourceLine: "MAGIC ADD BIGDOG R3",
-				symbolTable: symbolTableType{
+				symbolTable: symbols{
 					"BIGDOG": {
-						label:        "BIGDOG",
-						recordType:   instructionRecord,
-						line:         0x123,
-						directivePtr: nil,
-						opCodePtr:    opcodeTable["READ"],
-						source:       "READ 0x1234",
+						symbolType:         REL,
+						label:              "BIGDOG",
+						relativeLineNumber: 0x123,
+						sourceLine:         "READ 0x1234",
+						assemblyLink:       opcodeTable["READ"],
 					},
 				},
 			},
@@ -155,7 +154,7 @@ func Test_opCode_assemble(t *testing.T) {
 			opCode: opcodeTable["JMP"],
 			args: args{
 				sourceLine:  "JMP 0x1234",
-				symbolTable: symbolTableType{},
+				symbolTable: symbols{},
 			},
 			want:    []uint32{0x0CF01234},
 			wantErr: assert.NoError,
@@ -165,14 +164,13 @@ func Test_opCode_assemble(t *testing.T) {
 			opCode: opcodeTable["JMP"],
 			args: args{
 				sourceLine: "JMP BIGPIG",
-				symbolTable: symbolTableType{
+				symbolTable: symbols{
 					"BIGPIG": {
-						label:        "BIGPIG",
-						recordType:   instructionRecord,
-						line:         0x1234,
-						directivePtr: nil,
-						opCodePtr:    opcodeTable["READ"],
-						source:       "READ BIGDOG",
+						symbolType:         REL,
+						label:              "BIGPIG",
+						relativeLineNumber: 0x1234,
+						sourceLine:         "READ BIGDOG",
+						assemblyLink:       opcodeTable["READ"],
 					},
 				},
 			},
@@ -200,7 +198,7 @@ func Test_directive_assemble(t *testing.T) {
 	}
 	type args struct {
 		sourceLine  string
-		symbolTable symbolTableType
+		symbolTable symbols
 	}
 	tests := []struct {
 		name      string
@@ -254,14 +252,13 @@ func Test_directive_assemble(t *testing.T) {
 			directive: directiveTable["ADDRESS"],
 			args: args{
 				sourceLine: "ADDRESS HELLO R1",
-				symbolTable: symbolTableType{
+				symbolTable: symbols{
 					"HELLO": {
-						label:        "HELLO",
-						recordType:   directiveRecord,
-						line:         0x123,
-						directivePtr: directiveTable["WORD"],
-						opCodePtr:    nil,
-						source:       "WORD 0x33",
+						symbolType:         REL,
+						label:              "HELLO",
+						relativeLineNumber: 0x123,
+						sourceLine:         "WORD 0x33",
+						assemblyLink:       directiveTable["WORD"],
 					},
 				},
 			},
@@ -273,14 +270,13 @@ func Test_directive_assemble(t *testing.T) {
 			directive: directiveTable["ADDRESS"],
 			args: args{
 				sourceLine: "ADDRESS GOODBYE R1",
-				symbolTable: symbolTableType{
+				symbolTable: symbols{
 					"HELLO": {
-						label:        "HELLO",
-						recordType:   directiveRecord,
-						line:         0x123,
-						directivePtr: directiveTable["WORD"],
-						opCodePtr:    nil,
-						source:       "WORD 0x33",
+						symbolType:         REL,
+						label:              "HELLO",
+						relativeLineNumber: 0x123,
+						sourceLine:         "WORD 0x33",
+						assemblyLink:       directiveTable["WORD"],
 					},
 				},
 			},
