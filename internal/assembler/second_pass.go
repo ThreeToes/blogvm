@@ -2,7 +2,7 @@ package assembler
 
 import "github.com/ThreeToes/blogvm/internal/executable"
 
-func secondPass(firstPass *relocatableFile) (*executable.LoadableFile, error) {
+func secondPass(firstPass *firstPassFile) (*executable.LoadableFile, error) {
 	ret := &executable.LoadableFile{
 		BlockCount: 0x1,
 		Flags:      0,

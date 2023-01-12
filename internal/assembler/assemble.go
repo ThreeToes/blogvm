@@ -57,8 +57,8 @@ func Assemble(input io.Reader, includePaths []string) (*executable.LoadableFile,
 	return secondPass(firstPassF)
 }
 
-func assembleImports(records *relocatableFile, includePaths []string) (*relocatableFile, error) {
-	ret := newRelocatableFile()
+func assembleImports(records *firstPassFile, includePaths []string) (*firstPassFile, error) {
+	ret := newFirstPassFile()
 	for _, rec := range records.records {
 		if rec.symbolType != IMPORT {
 			continue

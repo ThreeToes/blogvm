@@ -7,10 +7,10 @@ import (
 
 func Test_relocatableFile_merge(t *testing.T) {
 	t.Run("empty everything", func(t *testing.T) {
-		r1 := newRelocatableFile()
-		r2 := newRelocatableFile()
+		r1 := newFirstPassFile()
+		r2 := newFirstPassFile()
 
-		expected := newRelocatableFile()
+		expected := newFirstPassFile()
 		err := r1.merge(r2)
 		assert.NoError(t, err)
 		assert.Equal(t, expected, r1)
@@ -23,7 +23,7 @@ func Test_relocatableFile_merge(t *testing.T) {
 			sourceLine:         "TEST COPY 0x01 R0",
 			assemblyLink:       opcodeTable["COPY"],
 		}
-		r1 := &relocatableFile{
+		r1 := &firstPassFile{
 			symbolTable: symbols{
 				"TEST": testSymbol,
 			},
@@ -31,12 +31,12 @@ func Test_relocatableFile_merge(t *testing.T) {
 				testSymbol,
 			},
 		}
-		r2 := newRelocatableFile()
+		r2 := newFirstPassFile()
 		err := r1.merge(r2)
 		assert.NoError(t, err)
 		assert.Equal(t, symbols{"TEST": testSymbol}, r1.symbolTable)
 		assert.Equal(t, []*symbol{testSymbol}, r1.records)
-		assert.Equal(t, newRelocatableFile(), r2)
+		assert.Equal(t, newFirstPassFile(), r2)
 	})
 	t.Run("empty merger", func(t *testing.T) {
 		testSymbol := &symbol{
@@ -46,7 +46,7 @@ func Test_relocatableFile_merge(t *testing.T) {
 			sourceLine:         "TEST COPY 0x01 R0",
 			assemblyLink:       opcodeTable["COPY"],
 		}
-		r2 := &relocatableFile{
+		r2 := &firstPassFile{
 			symbolTable: symbols{
 				"TEST": testSymbol,
 			},
@@ -54,7 +54,7 @@ func Test_relocatableFile_merge(t *testing.T) {
 				testSymbol,
 			},
 		}
-		r1 := newRelocatableFile()
+		r1 := newFirstPassFile()
 		err := r1.merge(r2)
 		assert.NoError(t, err)
 		assert.Equal(t, symbols{"TEST": testSymbol}, r1.symbolTable)
@@ -92,20 +92,20 @@ func Test_relocatableFile_merge(t *testing.T) {
 			assemblyLink:       directiveTable["WORD"],
 		}
 
-		r1 := &relocatableFile{
+		r1 := &firstPassFile{
 			symbolTable: symbols{
 				"GREETING": s2,
 			},
 			records: []*symbol{s1, s2},
 		}
-		r2 := &relocatableFile{
+		r2 := &firstPassFile{
 			symbolTable: symbols{
 				"MAGICNUMBER": s3,
 			},
 			records: []*symbol{s3},
 		}
 
-		expectedR := &relocatableFile{
+		expectedR := &firstPassFile{
 			symbolTable: symbols{
 				"GREETING":    s2,
 				"MAGICNUMBER": expectedS3,

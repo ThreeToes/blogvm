@@ -7,10 +7,10 @@ import (
 	"strings"
 )
 
-func firstPass(sourceFile io.Reader, lineNum uint32) (*relocatableFile, error) {
+func firstPass(sourceFile io.Reader, lineNum uint32) (*firstPassFile, error) {
 	ln := lineNum
 	src := bufio.NewReader(sourceFile)
-	reloc := newRelocatableFile()
+	reloc := newFirstPassFile()
 	for {
 		line, _, err := src.ReadLine()
 		if err != nil {

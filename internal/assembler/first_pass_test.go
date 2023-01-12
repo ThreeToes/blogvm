@@ -85,7 +85,7 @@ func Test_firstPass(t *testing.T) {
 	tests := []struct {
 		name     string
 		args     args
-		passFile *relocatableFile
+		passFile *firstPassFile
 		wantErr  assert.ErrorAssertionFunc
 	}{
 		{
@@ -93,7 +93,7 @@ func Test_firstPass(t *testing.T) {
 			args: args{
 				sourceFile: strings.NewReader("ADD R0 R1"),
 			},
-			passFile: &relocatableFile{
+			passFile: &firstPassFile{
 				symbolTable: symbols{},
 				records: []*symbol{
 					{
@@ -113,7 +113,7 @@ func Test_firstPass(t *testing.T) {
 				sourceFile: strings.NewReader(`DEADBEEF WORD 0xDEADBEEF
 READ DEADBEEF R0`),
 			},
-			passFile: &relocatableFile{
+			passFile: &firstPassFile{
 				symbolTable: symbols{
 					"DEADBEEF": {
 						symbolType:         REL,

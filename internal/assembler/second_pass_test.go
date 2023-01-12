@@ -9,7 +9,7 @@ import (
 
 func Test_secondPass(t *testing.T) {
 	type args struct {
-		firstPass *relocatableFile
+		firstPass *firstPassFile
 	}
 	tests := []struct {
 		name    string
@@ -20,7 +20,7 @@ func Test_secondPass(t *testing.T) {
 		{
 			name: "no symbols",
 			args: args{
-				firstPass: &relocatableFile{
+				firstPass: &firstPassFile{
 					symbolTable: symbols{},
 					records: []*symbol{
 						{

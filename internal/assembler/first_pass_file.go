@@ -28,12 +28,12 @@ func (s *symbol) assemble(symbolTable symbols) ([]uint32, error) {
 
 type symbols map[string]*symbol
 
-type relocatableFile struct {
+type firstPassFile struct {
 	symbolTable symbols
 	records     []*symbol
 }
 
-func (r *relocatableFile) merge(other *relocatableFile) error {
+func (r *firstPassFile) merge(other *firstPassFile) error {
 	newSymbolTable := symbols{}
 	originalLength := len(r.records)
 	newLength := originalLength + len(other.records)
@@ -78,8 +78,8 @@ func (r *relocatableFile) merge(other *relocatableFile) error {
 	return nil
 }
 
-func newRelocatableFile() *relocatableFile {
-	return &relocatableFile{
+func newFirstPassFile() *firstPassFile {
+	return &firstPassFile{
 		symbolTable: symbols{},
 		records:     nil,
 	}
